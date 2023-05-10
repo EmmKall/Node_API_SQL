@@ -1,11 +1,12 @@
 import { Router } from "express";
+import { getAll, findById, store, update, destroy } from '../controller/employees.controller.js';
 
 const router = Router();
 
-router.get( '/', ( req, res ) => res.status( 200 ).json({ msg: 'GetAll' }) );
-router.get( '/:id', ( req, res ) => res.status( 200 ).json({ msg: 'find' }) );
-router.post( '/', ( req, res ) => res.status( 200 ).json({ msg: 'store' }) );
-router.put( '/', ( req, res ) => res.status( 200 ).json({ msg: 'update' }) );
-router.delete( '/', ( req, res ) => res.status( 200 ).json({ msg: 'delete' }) );
+router.get( '/', getAll );
+router.get( '/:id', findById );
+router.post( '/', store );
+router.put( '/', update );
+router.delete( '/', destroy);
 
 export default router;
