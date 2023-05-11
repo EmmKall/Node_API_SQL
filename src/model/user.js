@@ -12,16 +12,24 @@ User.init({
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
     },
-    price: {
-        type: DataTypes.FLOAT( 12, 2 ),
-        allowNull: false,
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    in_sotck: {
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    is_active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: true
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
 }, {
     sequelize,

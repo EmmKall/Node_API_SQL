@@ -1,6 +1,10 @@
 import User from '../model/user.js';
 import { faker } from '@faker-js/faker';
 
+import { validDataIn } from '../helpers/validaIn.js';
+
+const LABELS = [ 'name', 'email', 'phone', 'password', 'is_active' ];
+
 const getAll = async ( req, res ) =>
 {
     try
@@ -33,11 +37,12 @@ const store = async ( req, res ) =>
     //Get data
     const { body } = req;
     //Valid data
-
+    const validation = await validDataIn( body, LABELS );
+    if( validation.length > 0 ) { return res.status( 400 ).json({ status: false, msg: 'Somthing wrong', errors: validation }); }
     //Save data
     try
     {
-        await User.sync(); // ({ force: true }),  ({ alter: true })
+        await User.sync({ alter: true }); // ({ force: true }),  ({ alter: true })
         //const register = await User.create({ name: faker.name.fullName(), price: faker.commerce.price(), in_sotck: faker.datatype.boolean() });
         const register = await User.create( body );
         return res.status( 200 ).json({ status: true, msg: 'user created', data: register });
@@ -53,7 +58,8 @@ const update = async ( req, res ) =>
     const { id } = req.params;
     const { body } = req;
     //Valid data
-
+    const validation = await validDataIn( body, LABELS );
+    if( validation.length > 0 ) { return res.status( 400 ).json({ status: false, msg: 'Somthing wrong', errors: validation }); }
     //Save data
     try
     {
