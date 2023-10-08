@@ -1,32 +1,28 @@
 import nodemailer from 'nodemailer';
 
+const transport = nodemailer.createTransport({
+    host: process.env.M_HOST,
+    port: process.env.M_PORT,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: process.env.M_USER,
+        pass: process.env.M_PASS,
+    },
+    tls: {
+        ciphers:'SSLv3'
+    }
+});
+
 export const sendMail = async ( type, to, subject, data, copy = '', attachment = null ) => {
-    const transport = nodemailer.createTransport({
-        host: process.env.M_HOST,
-        port: process.env.M_PORT,
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: process.env.M_USER,
-            pass: process.env.M_PASS,
-        },
-        tls: {
-            ciphers:'SSLv3'
-        }
-    });
-
-    transport.verify(function(error, success) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Server is ready to take our messages');
-        }
-    });
-
+    if( checkMail() === false ) { return false; }
     let body = { bodyText: '', bodyHTML: '' };
     switch ( type ) {
         case 'register':
             body = bodyRegistration( data );
             break;
+            case 'forger_pass':
+                body = bodyForgetPass( data );
+                break;
     
         default:
             break;
@@ -41,11 +37,24 @@ export const sendMail = async ( type, to, subject, data, copy = '', attachment =
             html: body.bodyHTML
         });
         console.log( 'Mail was send: ' + mail.messageId );
+        return true;
     } catch( error ){
         console.log('error: ', error);
+        return false;
     }
 }
 
+const checkMail = () => {
+    transport.verify(function(error, success) {
+        if (error) {
+            console.log(error);
+            return false;
+        } else {
+            console.log('Server is ready to take our messages');
+            return true;
+        }
+    });
+}
 //sendMail().catch(console.error);
 
 //Main body
@@ -58,12 +67,26 @@ const bodyRegistration = data => {
     let bodyHTML = getBodyMail();
     bodyHTML = bodyHTML.replace( '$title', 'Registration on EmmKall API' );
     const content = `
-        <p>Welcome ${ data.name } to EmmKall App</p>
+        <p>Welcome <b>${ data.name }</b> to <b>EmmKall App</b></p>
         <p>Follow the next link to confirm your registration, and you can interacture the app</p>
-        <a href="${ process.env.APP_ROUTE }/confirm/${ data.token }">Confirm your account</a>
+        <a href="${ process.env.APP_ROUTE }users/confirm/${ data.token }">Confirm your account</a>
     `;
     bodyHTML = bodyHTML.replace( '$body', content );
     const bodyText = `Confirm you email on the next link: ${ process.env.APP_ROUTE }/confirm/${ data.token } `;
+    const body = { bodyText, bodyHTML };
+    return body;
+}
+//Body Mail forget Pass
+const bodyForgetPass = data => {
+    let bodyHTML = getBodyMail();
+    bodyHTML = bodyHTML.replace( '$title', 'Recover Password' );
+    const content = `
+        <p>Hello <b>${ data.name }</b></p>
+        <p>It is your password to can interacture the app</p>
+        <p>Password: <b>${ data.password }</b></p>
+    `;
+    bodyHTML = bodyHTML.replace( '$body', content );
+    const bodyText = `Recover your password: ${ data.password } `;
     const body = { bodyText, bodyHTML };
     return body;
 }
