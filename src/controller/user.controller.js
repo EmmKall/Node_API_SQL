@@ -1,10 +1,13 @@
 import User from '../model/user.js';
+
 import { faker } from '@faker-js/faker';
 import Cryptr from 'cryptr'; //https://www.npmjs.com/package/cryptr
-import jwt from 'jsonwebtoken';
-import { ValidToken } from '../helpers/ValidToken.js';
+import { v4 as uuidv4 } from 'uuid';
 
+import { ValidToken } from '../helpers/ValidToken.js';
 import { validDataIn } from '../helpers/validaIn.js';
+import { CreateToken } from '../helpers/CreateToken.js';
+import { sendMail } from '../helpers/Mail.js';
 
 const LABELS = [ 'name', 'email', 'phone', 'password', 'is_active' ];
 
@@ -44,7 +47,7 @@ const findById = async ( req, res ) =>
 const store = async ( req, res ) => 
 {
     //Valid token
-    ValidToken( req, res );
+    //ValidToken( req, res );
     //Get data
     const { body } = req;
     //Valid data
@@ -53,7 +56,18 @@ const store = async ( req, res ) =>
     //Save data
     try
     {
+        //Unique email
+        const row = await User.findOne( { where: { email: body.email }} );
+        //if( row !== null ){ res.status( 400 ).json( { msg: `${body.email} already registered` } ); }
         body.password = cryptr.encrypt( body.password );
+        body.token = uuidv4();
+        //Enviar correo
+        const dataMail = {
+            token: body.token,
+            name: body.name
+        };
+        sendMail( 'register', body.email, 'App registration', dataMail );
+        return res.status( 200 ).json( body );
         await User.sync({ alter: true }); // ({ force: true }),  ({ alter: true })
         //const register = await User.create({ name: faker.name.fullName(), price: faker.commerce.price(), in_sotck: faker.datatype.boolean() });
         const register = await User.create( body );
@@ -96,7 +110,7 @@ const login = async( req, res ) => {
         if( row === null ) { return res.status( 400 ).json( { status:false, msg: `Data not found` } ); }
         if( cryptr.decrypt( row.password ) !== body.password ){ return res.status( 400 ).json( { status:false, msg: `Credentials not valid` } ); }
         const payload = { id: row.id, name: row.name, exp: ( Date.now() * 60 * 1000 * 60 * 12 ) };
-        row.token = jwt.sign( payload, process.env.SECRET_ENCRYP );
+        row.token = CreateToken( payload );
         await User.update( { token: row.token }, {where: { id: row.id } } );
         const data =  {
             token: row.token,
@@ -127,6 +141,9 @@ const destroy = async ( req, res ) =>
     
 }
 
+const confirm = async ( req, res ) => {
+    console.log( req );
+}
 export
 {
     getAll,
@@ -134,5 +151,6 @@ export
     store,
     update,
     destroy,
-    login
+    login,
+    confirm
 }

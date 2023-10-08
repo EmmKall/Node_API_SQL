@@ -27,6 +27,11 @@ User.init({
         allowNull: false,
         defaultValue: true
     },
+    is_confirm: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
     password: {
         type: DataTypes.STRING,
         allowNull: false
